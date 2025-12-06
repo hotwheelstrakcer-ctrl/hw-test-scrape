@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotwheels Monitor</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-bar {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        .stat-item {
+            font-size: 1em;
+            color: #b0b0b0;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #bb86fc;
+        }
+
+        .alerts-section {
+            margin-bottom: 20px;
+        }
+
+        .alert-card {
+            background: #1e1e1e;
+            border-left: 4px solid #cf6679;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .alert-card.new {
+            border-left-color: #03dac6;
+        }
+
+        .alert-card.stock {
+            border-left-color: #bb86fc;
+        }
+
+        .alert-time {
+            font-size: 0.8em;
+            color: #757575;
+            float: right;
+        }
+
+        .alert-link {
+            color: #bb86fc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .product-card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            transition: transform 0.2s, background 0.2s;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            background: #252525;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-weight: 500;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            line-height: 1.4;
+            color: #ffffff;
+        }
+
+        .product-link {
+            display: block;
+            padding: 8px 0;
+            background: #bb86fc;
+            color: #000;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .product-link:hover {
+            opacity: 0.9;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .loading-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #03dac6;
+            animation: pulse 1s infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
+        }
+
+        .monitor-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .monitor-title {
+            font-size: 1.2em;
+            color: #03dac6;
+            font-weight: 500;
+        }
+
+        .monitor-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
+
+        .monitor-grid::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .monitor-grid::-webkit-scrollbar-track {
+            background: #121212;
+        }
+
+        .monitor-grid::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .monitor-card {
+            min-width: 200px;
+            max-width: 200px;
+            background: #252525;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .monitor-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .monitor-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .monitor-badge.new {
+            background-color: #03dac6;
+        }
+
+        .monitor-badge.stock {
+            background-color: #bb86fc;
+        }
+
+        .sound-toggle {
+            background: #333;
+            color: #e0e0e0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 15px;
+            vertical-align: middle;
+        }
+
+        .sound-toggle.active {
+            background: #03dac6;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>In-Stock Monitor <span id="loading" class="loading-indicator"></span></h1>
+
+        <div class="stats-bar">
+            <div class="stat-item">In Stock: <span id="total-count" class="stat-value">0</span></div>
+            <div class="stat-item">
+                Updated: <span id="last-updated" class="stat-value">Waiting...</span>
+                <button id="sound-toggle" class="sound-toggle" onclick="toggleSound()">Sound: OFF</button>
+            </div>
+        </div>
+
+        <div class="monitor-section" id="monitor-section" style="display: none;">
+            <div class="monitor-header">
+                <div class="monitor-title">Live Monitor (New & Back in Stock)</div>
+            </div>
+            <div class="monitor-grid" id="monitor-container">
+                <!-- Monitored items will go here -->
+            </div>
+        </div>
+
+        <div class="alerts-section" id="alerts-container">
+            <!-- Alerts will go here -->
+        </div>
+
+        <div class="product-grid" id="products-container">
+            <!-- Products will go here -->
+        </div>
+    </div>
+
+    <script>
+        let soundEnabled = false;
+        let seenAlerts = new Set();
+        let firstLoad = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-toggle');
+            btn.textContent = soundEnabled ? 'Sound: ON' : 'Sound: OFF';
+            btn.classList.toggle('active', soundEnabled);
+
+            if (soundEnabled && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (soundEnabled) {
+                playBell();
+            }
+        }
+
+        function playBell() {
+            if (!soundEnabled) return;
+
+            const now = audioCtx.currentTime;
+
+            // Fundamental frequency (C5) and overtones for a bell sound
+            const fundamental = 523.25;
+            const ratios = [1, 2, 3, 4.2, 5.4];
+            const gains = [0.1, 0.05, 0.03, 0.02, 0.01];
+            const durations = [1.5, 1.2, 1.0, 0.8, 0.6];
+
+            ratios.forEach((ratio, i) => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = fundamental * ratio;
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(gains[i], now + 0.02); // Quick attack
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + durations[i]);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start(now);
+                oscillator.stop(now + durations[i]);
+            });
+        }
+
+        function updateData() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-count').textContent = data.total_count;
+                    document.getElementById('last-updated').textContent = data.last_updated;
+                    document.getElementById('loading').style.display = data.is_scraping ? 'inline-block' : 'none';
+
+                    // Update Alerts
+                    const alertsContainer = document.getElementById('alerts-container');
+                    alertsContainer.innerHTML = '';
+
+                    let hasNewAlert = false;
+                    data.alerts.forEach(alert => {
+                        const div = document.createElement('div');
+                        div.className = `alert-card ${alert.type === 'NEW' ? 'new' : 'stock'}`;
+                        div.innerHTML = `
+                            <span class="alert-time">${alert.time}</span>
+                            <strong>${alert.type === 'NEW' ? 'NEW' : 'BACK IN STOCK'}</strong><br>
+                            ${alert.message} <a href="${alert.link}" target="_blank" class="alert-link">View</a>
+                        `;
+                        alertsContainer.appendChild(div);
+
+                        const alertId = alert.time + alert.message;
+                        if (!seenAlerts.has(alertId)) {
+                            seenAlerts.add(alertId);
+                            if (!firstLoad) {
+                                hasNewAlert = true;
+                            }
+                        }
+                    });
+
+                    if (hasNewAlert) {
+                        playBell();
+                    }
+
+                    firstLoad = false;
+
+                    // Update Monitor Section
+                    const monitorSection = document.getElementById('monitor-section');
+                    const monitorContainer = document.getElementById('monitor-container');
+
+                    if (data.monitored_products && data.monitored_products.length > 0) {
+                        monitorSection.style.display = 'block';
+                        let monitorHtml = '';
+                        data.monitored_products.forEach(p => {
+                            const badgeClass = p.alert_type === 'NEW' ? 'new' : 'stock';
+                            const badgeText = p.alert_type === 'NEW' ? 'NEW' : 'BACK';
+                            const imageHtml = p.image ? `<img src="${p.image}" alt="${p.name}">` : '<div style="height:150px;background:#333;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border-radius:4px;">No Image</div>';
+
+                            monitorHtml += `
+                                <div class="monitor-card">
+                                    <span class="monitor-badge ${badgeClass}">${badgeText}</span>
+                                    ${imageHtml}
+                                    <div class="product-name" style="font-size:0.85em; margin-bottom:10px;" title="${p.name}">${p.name}</div>
+                                    <div style="font-size:0.75em; color:#757575; margin-bottom:8px;">${p.alert_time}</div>
+                                    <a href="${p.link}" target="_blank" class="product-link">BUY NOW</a>
+                                </div>
+                            `;
+                        });
+                        monitorContainer.innerHTML = monitorHtml;
+                    } else {
+                        monitorSection.style.display = 'none';
+                    }
+
+                    // Update Products
+                    const productsContainer = document.getElementById('products-container');
+
+                    let productsHtml = '';
+                    Object.values(data.products).forEach(p => {
+                        const imageHtml = p.image ? `<img src="${p.image}" alt="${p.name}">` : '<div style="height:200px;background:#333;display:flex;align-items:center;justify-content:center;margin-bottom:15px;border-radius:4px;">No Image</div>';
+                        productsHtml += `
+                            <div class="product-card">
+                                ${imageHtml}
+                                <div class="product-name" title="${p.name}">${p.name}</div>
+                            </div>
+                        `;
+                    });
+                    productsContainer.innerHTML = productsHtml;
+                })
+                .catch(err => console.error('Error fetching data:', err));
+        }
+
+        setInterval(updateData, 5000);
+        updateData(); 
+    </script>
+</body>
+
+</html>
