@@ -122,10 +122,13 @@ def get_data():
         'total_count': len(in_stock_products)
     })
 
+# Start scraper thread
+# We start it here so it runs when Gunicorn imports 'app'
+# Note: Gunicorn with multiple workers will spawn multiple threads (one per worker).
+# Default Gunicorn sync worker count is 1, which is fine.
+thread = threading.Thread(target=scraper_loop, daemon=True)
+thread.start()
+
 if __name__ == '__main__':
-    # Start scraper thread
-    thread = threading.Thread(target=scraper_loop, daemon=True)
-    thread.start()
-    
     # Run Flask app
     app.run(debug=True, use_reloader=False) # use_reloader=False to prevent double execution of thread
