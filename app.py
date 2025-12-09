@@ -97,7 +97,8 @@ def scraper_loop():
                 print(f"Error in scraper loop: {e}")
             
             is_scraping = False
-            time.sleep(10)
+            is_scraping = False
+            time.sleep(1) # Reduced to 1s for maximum frequency
             
     except Exception as e:
         print(f"Fatal scraper error: {e}")

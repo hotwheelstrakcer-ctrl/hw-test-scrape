@@ -35,14 +35,14 @@ def scroll_to_bottom(driver):
         # Scroll down to bottom
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-        # Wait to load page
-        time.sleep(2)
+        # Wait to load page (reduced from 2s to 0.5s for speed)
+        time.sleep(0.5)
 
         # Calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
-            # Try one more small scroll or wait a bit longer to be sure
-            time.sleep(2)
+            # Try one more small wait to be sure, but shorter
+            time.sleep(1.0)
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break
