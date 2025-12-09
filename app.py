@@ -27,7 +27,6 @@ def scraper_loop():
             print(f"Scraping... {datetime.datetime.now().strftime('%H:%M:%S')}")
             
             try:
-            try:
                 # driver.get(URL) -> Replaced by fetch_page_content
                 # scroll_to_bottom(driver) -> No longer needed
                 from monitor_selenium import fetch_page_content
