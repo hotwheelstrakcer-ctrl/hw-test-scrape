@@ -1,44 +1,58 @@
 import time
 import sys
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from colorama import init, Fore, Style
 
-# Although named 'monitor_selenium', we are now using requests for speed
-# keeping file name to avoid breaking imports in app.py
-
 init()
 
-# Base URL without query params for cleanliness, but we use the full one provided
 URL = "https://www.firstcry.com/hotwheels/5/0/113?sort=popularity&q=ard-hotwheels&ref2=q_ard_hotwheels&asid=53241"
 seen_products = {}
 
 def setup_driver():
-    # Deprecated: No longer needed with requests, but kept for compatibility
-    return None 
+    chrome_options = Options()
+    chrome_options.add_argument("--headless") # Run in headless mode
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--log-level=3") # Suppress logs
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # PERFORMANCE OPTIMIZATION: Disable images
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    chrome_options.add_experimental_option("prefs", prefs)
+    
+    # Suppress "DevTools listening on..."
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
 
 def scroll_to_bottom(driver):
-    # Deprecated: No longer needed
-    pass
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    
+    while True:
+        # Scroll down to bottom
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-def fetch_page_content(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
-    }
-    try:
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        return response.text
-    except Exception as e:
-        print(f"Request error: {e}")
-        return None
+        # Wait to load page (reduced from 2s to 0.5s for speed)
+        time.sleep(0.5)
+
+        # Calculate new scroll height and compare with last scroll height
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            # Try one more small wait to be sure, but shorter
+            time.sleep(1.0)
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+        last_height = new_height
 
 def parse_page(html):
-    if not html:
-        return {}
-        
     soup = BeautifulSoup(html, 'html.parser')
     products = {}
     
@@ -65,6 +79,7 @@ def parse_page(html):
             
             # Stock Status Logic
             add_to_cart_btn = block.find('div', class_='ga_bn_btn_addcart')
+            
             block_text = block.text.lower()
             text_indicates_oos = "out of stock" in block_text or "sold out" in block_text or "notify me" in block_text
             
@@ -87,30 +102,3 @@ def parse_page(html):
             continue
             
     return products
-
-# Modified monitor function for standalone testing if needed
-def monitor():
-    print(f"{Fore.CYAN}Starting Fast Requests monitor for: {URL}{Style.RESET_ALL}")
-    
-    first_run = True
-    
-    try:
-        while True:
-            print(f"{Fore.YELLOW}Checking... {time.strftime('%H:%M:%S')}{Style.RESET_ALL}")
-            
-            html = fetch_page_content(URL)
-            current_products = parse_page(html)
-            
-            if not current_products:
-                print(f"{Fore.RED}No products found. Check blocked/selectors.{Style.RESET_ALL}")
-            
-            # ... (rest of logic similar to original, omitted for brevity in file rewrite if not main entry point)
-            # Keeping it simple for app.py integration
-            
-            time.sleep(10)
-            
-    except KeyboardInterrupt:
-        print(f"\n{Fore.CYAN}Stopping monitor.{Style.RESET_ALL}")
-
-if __name__ == "__main__":
-    monitor()
