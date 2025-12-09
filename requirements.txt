@@ -4,3 +4,4 @@ colorama
 flask
 beautifulsoup4
 gunicorn
+requests

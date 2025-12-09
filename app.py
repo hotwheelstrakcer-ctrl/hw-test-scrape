@@ -17,7 +17,7 @@ def scraper_loop():
     global current_products, alerts, monitored_products, last_updated, is_scraping
     
     print("Starting background scraper...")
-    driver = setup_driver()
+    # driver = setup_driver() # No longer needed
     seen_products = {}
     first_run = True
     
@@ -27,10 +27,16 @@ def scraper_loop():
             print(f"Scraping... {datetime.datetime.now().strftime('%H:%M:%S')}")
             
             try:
-                driver.get(URL)
-                scroll_to_bottom(driver)
-                html = driver.page_source
-                fetched_products = parse_page(html)
+            try:
+                # driver.get(URL) -> Replaced by fetch_page_content
+                # scroll_to_bottom(driver) -> No longer needed
+                from monitor_selenium import fetch_page_content
+                
+                html = fetch_page_content(URL)
+                if html:
+                    fetched_products = parse_page(html)
+                else:
+                    fetched_products = {}
                 
                 # Update global products
                 current_products = fetched_products
@@ -103,7 +109,8 @@ def scraper_loop():
     except Exception as e:
         print(f"Fatal scraper error: {e}")
     finally:
-        driver.quit()
+        pass
+        # driver.quit() # No longer needed
 
 @app.route('/')
 def index():
